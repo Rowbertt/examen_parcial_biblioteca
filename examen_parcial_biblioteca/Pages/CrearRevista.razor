@@ -1,0 +1,79 @@
+﻿@page "/Revista-crear"
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager NavigationManager
+
+<h3>Revista</h3>
+
+<EditForm Model="@revista" OnValidSubmit="@Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="Titulo">Titulo de la revista</label>
+        <InputText id="Titulo" @bind-Value="revista.Titulo" class="form-control" />
+        <ValidationMessage For="() => revista.Titulo" />
+    </div>
+    <!-- Agrega los otros campos aquí -->
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+</EditForm>
+
+@if (revistas != null && revistas.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Titulo</th>
+                <th>Autor</th>
+                <th>Genero</th>
+                <th>AnioPublicacion</th>
+                <th>Volumen</th>
+                <th>NumEjemplar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var revista in revistas)
+            {
+                <tr>
+                    <td>@revista.Titulo</td>
+                    <td>@revista.Autor</td>
+                    <td>@revista.Genero</td>
+                    <td>@revista.AnioPublicacion</td>
+                    <td>@revista.Volumen</td>
+                    <td>@revista.NumEjemplar</td>
+                    <td>
+                        <button class="btn btn-danger" @onclick="@(() => BorrarRevista(revista.Volumen))">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Revista revista = new Revista();
+    private List<Revista> revistas = new List<Revista>();
+
+    protected async Task Guardar()
+    {
+        revistas.Add(revista);
+        await localStorage.SetItemAsync("revistas", revistas);
+        revista = new Revista(); // Limpiar el modelo después de guardar
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        revistas = await localStorage.GetItemAsync<List<Revista>>("revistas");
+        if (revistas == null)
+            revistas = new List<Revista>();
+    }
+
+    protected async Task BorrarRevista(string Volumen)
+    {
+        revistas.RemoveAll(r => r.Volumen == Volumen);
+        await localStorage.SetItemAsync("revistas", revistas);
+    }
+}
